@@ -1,0 +1,23 @@
+# Build output and local tools
+dist/
+node_modules/
+screenshots/
+.wrangler/
+*.log
+
+# Your own deployment settings and media (see README.md)
+wrangler.jsonc
+wrangler.toml
+media/local/
+.env
+.env.*
+.dev.vars
+
+# Keys, certificates, credentials and private records: never commit these
+*.p8
+*.p12
+*.pem
+*.key
+credentials.json
+receipts/
+private-receipts/

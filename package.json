@@ -1,0 +1,26 @@
+{
+  "name": "dropack-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Source of the Dropack official website: a static site in 16 languages, built with Node.js built-ins.",
+  "license": "MIT",
+  "homepage": "https://dropack.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chekusu/dropack.app.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/build.mjs && node --test tests/*.test.mjs",
+    "preview": "node scripts/serve.mjs",
+    "screens": "node scripts/build.mjs && node scripts/screens.mjs",
+    "sample-media": "node scripts/sample-media.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}

@@ -1,0 +1,497 @@
+/* Dropack — deep green on warm watercolor paper. Light in every colour scheme (the selected
+   Watercolor Breeze direction). No web fonts. One tiny script: the language selector. */
+
+:root {
+  /* The paper matches the film's own warm background at its edges (≈ #f1ebe0), so the
+     film sits in the page without a seam. */
+  --paper: #f2ece1;
+  --paper-2: #e9e1d2;
+  --ink: #1b2a22;
+  --ink-soft: #4a5a51;
+  --green: #1f4a38;
+  --green-deep: #143326;
+  --green-ink: #f3eee2;
+  --kraft: #c8a46e;
+  --kraft-soft: #e3cfa9;
+  --line: #d6cdb9;
+  --focus: #b5541c;
+
+  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC",
+    "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "Noto Serif SC",
+    "Source Han Serif SC", "Noto Serif CJK SC", Georgia, serif;
+  --display: var(--sans);
+
+  --step--1: clamp(0.84rem, 0.8rem + 0.2vw, 0.92rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.08rem);
+  --step-1: clamp(1.16rem, 1.08rem + 0.4vw, 1.32rem);
+  --step-2: clamp(1.45rem, 1.25rem + 1vw, 2rem);
+  --step-3: clamp(1.9rem, 1.5rem + 2vw, 3rem);
+  --step-4: clamp(2.3rem, 1.6rem + 3.6vw, 4.6rem);
+
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --space-section: clamp(4.5rem, 10vw, 9rem);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: light;
+}
+
+:root:lang(en) { --display: var(--serif); }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.75;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
+}
+
+:lang(en) body, body:lang(en) { line-height: 1.6; }
+
+h1, h2, h3 {
+  font-family: var(--display);
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+p { margin: 0 0 1em; text-wrap: pretty; }
+
+a { color: var(--green); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+}
+
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  background: var(--green);
+  color: var(--green-ink);
+  border-radius: 6px;
+}
+.skip:focus { top: 1rem; }
+
+/* ——— Header ——— */
+
+.site-header { position: relative; z-index: 1; }
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: var(--header-h);
+}
+:root { --header-h: 4rem; }
+
+/* The logo is one approved transparent image with its own margins, never cropped or
+   rebuilt in type: 168 CSS px wide in the header, 150 in the footer, at its true
+   2171 : 724 ratio. The page stays light in every colour scheme, so the deep-green
+   wordmark is shown as is, never filtered. */
+.brand { display: block; flex: none; line-height: 0; border-radius: 4px; margin-left: -11px; }
+.logo { display: block; width: 168px; height: auto; aspect-ratio: 2171 / 724; }
+.logo-footer { width: 150px; }
+
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 2.5vw, 1.8rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--step--1);
+}
+
+.nav-list a {
+  color: var(--ink);
+  text-decoration: none;
+  padding-block: 0.5rem;
+}
+.nav-list a:hover, .nav-list a[aria-current="page"] { color: var(--green); text-decoration: underline; }
+
+.nav-list .lang {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+}
+.nav-list .lang:hover { background: var(--ink); color: var(--paper); text-decoration: none; }
+
+@media (max-width: 40rem) {
+  .nav-optional { display: none; }
+}
+
+/* ——— Shared section type ——— */
+
+main section { padding-block: var(--space-section); }
+
+.kicker, .eyebrow {
+  margin-bottom: 1.1rem;
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--green);
+}
+:lang(en) .kicker, :lang(en) .eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.78rem; }
+
+h2 {
+  font-size: var(--step-3);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  max-width: 18em;
+  margin-bottom: 1.4rem;
+}
+:lang(en) h2 { font-weight: 600; line-height: 1.12; letter-spacing: -0.015em; }
+
+.lede { font-size: var(--step-1); color: var(--ink-soft); max-width: 34em; }
+
+/* ——— Landing: the film first ——— */
+
+/* The cream behind the player is the film's own edge colour (≈ rgb 238–242, 229–236,
+   217–226), so the picture meets the page without a lighter rectangle. */
+/* The scene: the watercolor layer (approved decoration with a transparent centre) sits
+   behind the header, slogan, film and steps. It is a pseudo-element: not interactive, not
+   in the accessibility tree, and always under the content. Soft CSS washes give the paper
+   colour depth where the painted layer is transparent. */
+.film { position: relative; overflow-x: clip; padding-block: clamp(1.5rem, 4vw, 3rem) clamp(3rem, 7vw, 5.5rem); }
+/* overflow-x: clip keeps the cream wash behind the film (which reaches past the narrow phone
+   gutters) from widening the page; vertical overflow stays visible for the header layer. */
+.film::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * var(--header-h)) 0 0;
+  pointer-events: none;
+  background:
+    url("/art/watercolor-desktop.webp") center top / cover no-repeat,
+    radial-gradient(56% 46% at 50% 50%, rgba(240, 233, 221, 0.9), rgba(240, 233, 221, 0) 74%),
+    radial-gradient(40% 18% at 50% 6%, rgba(250, 246, 238, 0.7), rgba(250, 246, 238, 0) 80%),
+    radial-gradient(34% 30% at 12% 82%, rgba(236, 196, 164, 0.22), rgba(236, 196, 164, 0) 70%),
+    radial-gradient(32% 30% at 88% 18%, rgba(168, 196, 164, 0.2), rgba(168, 196, 164, 0) 70%),
+    var(--paper);
+  /* Feather the bottom so the scene dissolves into the paper above the FAQ (no hard edge). */
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+}
+@media (max-width: 40rem) {
+  .film::before { background-image:
+    url("/art/watercolor-mobile.webp"),
+    radial-gradient(70% 40% at 50% 42%, rgba(240, 233, 221, 0.9), rgba(240, 233, 221, 0) 74%),
+    radial-gradient(50% 30% at 10% 88%, rgba(236, 196, 164, 0.22), rgba(236, 196, 164, 0) 70%),
+    radial-gradient(50% 30% at 92% 10%, rgba(168, 196, 164, 0.2), rgba(168, 196, 164, 0) 70%),
+    radial-gradient(70% 16% at 50% 80%, rgba(242, 236, 225, 0.85), rgba(242, 236, 225, 0) 80%);
+    background-size: 112% auto, auto, auto, auto, auto;
+    background-position: 55% calc(var(--header-h) * 0.6), center, center, center, center;
+    /* On phones the foliage is barely there behind the header and slogan (clean space for the
+       wordmark and every language's headline), full beside the film, and fades out at the
+       bottom; the steps get a light cream wash so their text reads cleanly. */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.12) 27%, #000 40%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.12) 27%, #000 40%, #000 80%, transparent 100%);
+  }
+}
+.film h1 {
+  font-size: clamp(1.55rem, 1.05rem + 2.2vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  max-width: 26em;
+  margin: 0 auto clamp(1.4rem, 3vw, 2.2rem);
+  text-align: center;
+}
+:lang(en) .film h1 { line-height: 1.15; }
+
+.player { position: relative; margin: 0 auto; max-width: 60rem; }
+/* A soft elliptical cream wash behind the picture (the film's own edge colour), fading out with
+   no edge, keeps the painted washes from touching the feathered picture. Decorative only. */
+.demo-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -12% -8%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, #f2ece1 0, #f2ece1 72%, rgba(242, 236, 225, 0) 100%);
+}
+/* The film's own cream paper continues the page: no frame, ring or shadow; only a small
+   corner radius. The native controls are the playback affordance. */
+.player video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  background: var(--paper);
+}
+
+/* ——— The film as an inline animation (public/demo.js) ———
+   No native video UI: once the script takes over, the picture's outer few percent feather into
+   the cream (the centre stays fully opaque), captions are drawn in their own layer from the
+   page's WebVTT track, and three small icon buttons sit below the picture, never over captions.
+   Without JavaScript the native controls stay as a fallback. */
+.demo-stage { position: relative; }
+.demo.is-ready video {
+  border-radius: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 3.5%, #000 96.5%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 5%, #000 95%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0, #000 3.5%, #000 96.5%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 5%, #000 95%, transparent 100%);
+  mask-composite: intersect;
+}
+.demo-captions {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 88%;
+  margin: 0;
+  padding: 0.12em 0.55em;
+  border-radius: 4px;
+  font-size: clamp(14px, 1.55vw, 22px);
+  line-height: 1.35;
+  text-align: center;
+  white-space: pre-line;
+  color: #f7f4ec;
+  background: rgba(13, 26, 20, 0.78);
+  pointer-events: none;
+}
+.demo-captions[hidden] { display: none; }
+/* A film with a presenter inset (manifest "presenter": true): the presenter sits at the lower right
+   (x ≥ 83.75 %, y ≥ 71 %, a name label down to about 98.5 %). The right and bottom edges feather
+   only in the outer 1 % so the inset stays clear; top and left keep the usual feather. On phone
+   widths a centred caption would reach the inset, so it moves just below the picture into a strip
+   of fixed height (one 14 px line), and the picture never shifts when captions come and go. */
+.demo-presenter.is-ready video {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 3.5%, #000 99%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 5%, #000 99%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 3.5%, #000 99%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 5%, #000 99%, transparent 100%);
+}
+@media (max-width: 40rem) {
+  .demo-presenter.is-ready .demo-stage { padding-bottom: calc(0.4rem + 23px); }
+  .demo-presenter.is-ready .demo-captions { bottom: 0; }
+}
+.demo-controls:not([hidden]) {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+.demo-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--green);
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) { .demo-btn:hover { background: rgba(31, 74, 56, 0.08); } }
+.demo-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.demo-btn[data-state="off"] .i-on, .demo-btn[data-state="on"] .i-off,
+.demo-btn[data-state="play"] .i-pause, .demo-btn[data-state="pause"] .i-play,
+.demo-btn:not([data-state]) .i-on, .demo-btn:not([data-state]) .i-pause { display: none; }
+
+/* Captions (the page's WebVTT track): readable on phones (≥ 14 px), about 22 px on desktop;
+   wrapping and placement stay the browser's, so they follow the native controls and fullscreen. */
+video::cue {
+  font-size: clamp(14px, 1.55vw, 22px);
+  line-height: 1.35;
+  color: #f7f4ec;
+  background: rgba(13, 26, 20, 0.78);
+}
+/* With the inline film running (demo.js), its HTML layer is the one visible caption and the track
+   is kept 'hidden'; this also covers the moment before the script reacts when a browser switches
+   the track to 'showing' by itself. Without JavaScript the native captions above stay. */
+.demo.is-ready video::cue { visibility: hidden; }
+
+.steps-row {
+  list-style: none;
+  margin: clamp(1.8rem, 4vw, 2.6rem) auto 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem clamp(1.2rem, 5vw, 3.2rem);
+  font-weight: 600;
+}
+.steps-row li { display: flex; align-items: center; gap: 0.55rem; }
+.step-icon svg { display: block; width: 28px; height: 28px; fill: none; stroke: var(--green); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The TestFlight invitation: one primary button under the steps, the iOS requirement below it. */
+.get { margin: clamp(1.6rem, 3.5vw, 2.2rem) 0 0; text-align: center; }
+.get-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  max-width: 100%;
+  padding: 0.6rem 1.7rem;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--green-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.get-btn:hover { background: var(--green-deep); }
+
+.film .status-line {
+  max-width: 44em;
+  margin: 0.8rem auto 0;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+
+/* One external-storage use case between the film and the FAQ: a heading and a sentence,
+   on plain paper below the watercolor scene. */
+.usecase { padding-block: 0 clamp(2rem, 5vw, 3rem); }
+.usecase-wrap { max-width: 46rem; }
+.usecase h2 { font-size: var(--step-1); margin-bottom: 0.35rem; }
+.usecase p { margin: 0; color: var(--ink-soft); max-width: 40em; }
+
+.faq { padding-block: 0 clamp(3rem, 7vw, 5rem); }
+.faq-wrap { max-width: 46rem; }
+.faq h2 { font-size: var(--step-1); margin-bottom: 0.6rem; }
+.faq details { border-top: 1px solid var(--line); }
+.faq details:last-child { border-bottom: 1px solid var(--line); }
+.faq summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--green); font-weight: 400; }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { margin: 0 0 1rem; color: var(--ink-soft); max-width: 40em; }
+
+.lang-pick { display: flex; align-items: center; gap: 0.5rem; font-size: var(--step--1); }
+.lang-pick label { color: var(--ink-soft); }
+.lang-pick select {
+  font: inherit;
+  color: var(--ink);
+  background-color: rgba(255, 253, 248, 0.85);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  max-width: 11rem;
+}
+.lang-fallback { display: flex; flex-wrap: wrap; gap: 0.2rem 0.6rem; margin: 0; }
+@media (max-width: 26rem) { .lang-pick label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } }
+
+h1 { font-size: var(--step-4); font-weight: 800; line-height: 1.12; letter-spacing: -0.02em; margin-bottom: 1.6rem; }
+:lang(en) h1 { font-weight: 600; line-height: 1.04; letter-spacing: -0.025em; }
+
+.status-line { font-size: var(--step--1); color: var(--ink-soft); }
+
+/* Hero illustration: four frames settle into an open parcel. */
+
+.hero-art { margin: 0; }
+.hero-art svg { display: block; width: 100%; max-width: 30rem; height: auto; margin-inline: auto; overflow: visible; }
+
+.box-back { fill: var(--kraft); opacity: 0.55; }
+.box-front { fill: var(--kraft-soft); stroke: var(--green); stroke-width: 2.5; stroke-linejoin: round; }
+.flap { fill: var(--kraft-soft); stroke: var(--green); stroke-width: 2.5; stroke-linejoin: round; transform-box: fill-box; }
+.flap-l { transform-origin: 100% 100%; }
+.flap-r { transform-origin: 0% 100%; }
+.box-tape { fill: var(--green); }
+.box-seam { stroke: var(--green-ink); stroke-width: 1.5; stroke-dasharray: 6 6; opacity: 0.7; }
+.box-label rect { fill: var(--paper); stroke: var(--green); stroke-width: 1.5; }
+.box-label path { stroke: var(--green); stroke-width: 2; stroke-linecap: round; opacity: 0.7; }
+
+.f-paper { fill: var(--paper); stroke: var(--green); stroke-width: 2.5; }
+.f-hill { fill: var(--green); opacity: 0.85; }
+.f-sun { fill: var(--kraft); }
+.f-play { fill: var(--green); }
+.frame { transform-box: fill-box; transform-origin: 50% 50%; }
+.frame-1 { transform: rotate(-7deg); }
+.frame-2 { transform: rotate(5deg); }
+.frame-3 { transform: rotate(9deg); }
+.frame-4 { transform: rotate(-2deg); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .frame { animation: settle 1.1s var(--ease-out) both; }
+  .frame-1 { --r: -7deg; animation-delay: 0.15s; }
+  .frame-2 { --r: 5deg; animation-delay: 0.3s; }
+  .frame-3 { --r: 9deg; animation-delay: 0.45s; }
+  .frame-4 { --r: -2deg; animation-delay: 0.6s; }
+  .flap-l { animation: flap-l 1.4s var(--ease-out) 0.2s both; }
+  .flap-r { animation: flap-r 1.4s var(--ease-out) 0.2s both; }
+
+  @keyframes settle {
+    from { opacity: 0; transform: translateY(-46px) rotate(calc(var(--r) * -1)); }
+    to { opacity: 1; transform: translateY(0) rotate(var(--r)); }
+  }
+  @keyframes flap-l { from { transform: rotate(-26deg); } to { transform: rotate(0); } }
+  @keyframes flap-r { from { transform: rotate(26deg); } to { transform: rotate(0); } }
+}
+
+/* ——— Footer ——— */
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding-block: 2.5rem calc(2.5rem + env(safe-area-inset-bottom));
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+.footer-row { display: grid; gap: 0.6rem; }
+.footer-brand { margin: 0 0 0.4rem -10px; line-height: 0; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; }
+.footer-links a { color: var(--ink); }
+.fine { margin: 0; font-size: 0.8rem; }
+
+/* ——— Document pages (privacy, 404) ——— */
+
+.doc { padding-block: clamp(3rem, 8vw, 6rem); }
+.doc-wrap { max-width: 46rem; }
+.doc h1 { font-size: var(--step-3); }
+.doc h2 { font-size: var(--step-2); margin: 2.6rem 0 0.8rem; }
+.doc ul { margin: 0; padding-left: 1.2rem; }
+.doc li { margin-bottom: 0.7rem; color: var(--ink-soft); }
+.doc li::marker { color: var(--kraft); }
+.doc-end { margin-top: 2.6rem; padding-top: 1.4rem; border-top: 1px solid var(--line); color: var(--ink-soft); }
+
+.not-found .hero-art svg { max-width: 16rem; margin: 0 0 2rem; }
+.empty-box .frame { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+@media print {
+  .site-header, .skip { display: none; }
+  body { background: #fff; color: #000; }
+}

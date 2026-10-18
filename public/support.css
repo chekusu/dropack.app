@@ -1,0 +1,58 @@
+/* The bilingual support page (/support/), on top of styles.css. The page's own stylesheet,
+   so styles.css and every other page stay unchanged. Light only, no images, no filters. */
+
+/* Undo the landing sections' large padding for the question blocks (the card keeps its own). */
+.page-support .sp-faq, .page-support .sp-q { padding-block: 0; }
+
+/* Each heading: Chinese, then its English on its own line. */
+.page-support h1 .sp-en,
+.page-support h2 .sp-en,
+.page-support h3 .sp-en {
+  display: block;
+  margin-top: 0.2em;
+  font-size: 0.62em;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.page-support h1 { margin-bottom: 1.4rem; }
+.page-support .lede { margin-bottom: 0.8rem; }
+
+/* Contact: one card on the paper, with the button to the CHEKUSU form. */
+.sp-contact {
+  margin-top: 2.6rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: rgba(255, 253, 248, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.doc .sp-contact h2 { margin-top: 0; }
+.sp-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.9rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--green-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.sp-cta:hover { background: var(--green-deep); }
+.sp-note { font-size: var(--step--1); color: var(--ink-soft); }
+.sp-contact address {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-style: normal;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+
+/* Questions: always open, one heading each, Chinese then English. */
+.sp-q { margin-top: 1.8rem; }
+.sp-q h3 { font-size: var(--step-1); font-weight: 700; line-height: 1.35; margin-bottom: 0.5rem; }
+.page-support .sp-q h3 .sp-en { font-size: 0.8em; }
+.sp-q p { color: var(--ink-soft); }
+
+.sp-privacy p { margin-bottom: 0.4rem; }
+.sp-back { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin-top: 1.6rem; }

@@ -1,0 +1,20 @@
+// Example Cloudflare Workers configuration. Copy it to wrangler.jsonc (ignored by Git) and adjust
+// it for an account and domain you control; nothing here refers to the official deployment.
+// Static assets come from dist/ (run `npm run build` first). worker/index.mjs runs first only
+// for /media/* and adds byte ranges to the MP4 files so browsers can seek.
+{
+  "name": "dropack-website-example",
+  "main": "worker/index.mjs",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/media/*"],
+    // Missing paths get dist/404.html with a 404 status.
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  // Serves on <name>.<your-subdomain>.workers.dev. For your own domain, set "workers_dev": false
+  // and add, for example: "routes": [{ "pattern": "example.com", "custom_domain": true }]
+  "workers_dev": true
+}

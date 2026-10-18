@@ -1,0 +1,14 @@
+{
+  "about": "Neutral sample media for local builds: an original animation drawn by scripts/sample-media.mjs (no audio, no photographs, no people). Replace it with your own media through DROPACK_MEDIA_MANIFEST; see README.md.",
+  "default": {
+    "video": "sample-film.mp4",
+    "poster": "sample-poster.jpg",
+    "width": 640,
+    "height": 360,
+    "duration": 36
+  },
+  "sha256": {
+    "sample-film.mp4": "92a4fbf88a5ead13fd5685bd802679bf6934338e690a77300d69f7a2afafcf7b",
+    "sample-poster.jpg": "6967f25820c81f229769b0d87cf9503b58251ea599a76029bb8322627eabe1f2"
+  }
+}
