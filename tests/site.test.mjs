@@ -263,7 +263,7 @@ test('one short external-storage use case, neutral package wording and the .drop
   assert.equal(titles.size, 16, 'every language has its own use-case heading');
 });
 
-test('the bilingual support page: verified help, the CHEKUSU contact form, no email, address or form', async () => {
+test('the bilingual support page: verified help, the CHEKUSU contact form and address, no email or form', async () => {
   const { SUPPORT: s } = await import('../src/support.mjs');
   const html = read('support/index.html');
   const copy = text(html);
@@ -273,14 +273,14 @@ test('the bilingual support page: verified help, the CHEKUSU contact form, no em
   assert.match(read('sitemap.xml'), new RegExp(`<loc>${ORIGIN}/support/</loc>`));
   // Every fact appears exactly as written, Chinese and English.
   const facts = [s.intro.zh, s.intro.en, s.contact.context.zh, s.contact.context.en, s.contact.company,
-    s.privacy.zh.text, s.privacy.en.text, ...s.faq.flatMap((f) => [f.a.zh, f.a.en])];
+    s.contact.address.ja, s.contact.address.en, s.privacy.zh.text, s.privacy.en.text, ...s.faq.flatMap((f) => [f.a.zh, f.a.en])];
   for (const f of facts) assert.ok(copy.includes(f.replace(/\s+/g, ' ')), `support copy: ${f.slice(0, 30)}`);
   assert.equal(s.faq.length, 7);
   // Headings: one h1, two h2, one h3 per question; English parts are marked lang="en".
   assert.equal((html.match(/<h2 /g) || []).length, 2);
   assert.equal((html.match(/<h3 /g) || []).length, 7);
   assert.equal((html.match(/<span class="sp-en" lang="en">/g) || []).length, 10);
-  assert.doesNotMatch(html, /<address|〒|\b\d{3}-\d{4}\b/, 'no postal address');
+  assert.match(html, /<span lang="ja">〒106-0044 東京都港区東麻布2-35-1 KCビル 6F 19号室<\/span>/);
   // The contact link: the verified company form, described, and the only external URL.
   assert.match(html, /<a class="sp-cta" href="https:\/\/chekusu\.com\/#contact" aria-describedby="contact-note">联系支持 \/ Contact support<\/a>/);
   assert.match(html, /id="contact-note"/);
