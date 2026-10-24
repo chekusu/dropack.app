@@ -388,7 +388,7 @@ function supportPage() {
       <p class="sp-note" id="contact-note">${esc(c.note.zh)} <span lang="en">${esc(c.note.en)}</span></p>
       <p>${esc(c.context.zh)}</p>
       <p lang="en">${esc(c.context.en)}</p>
-      <p>${esc(c.company)}</p>
+      <address>${esc(c.company)}<br><span lang="ja">${esc(c.address.ja)}</span><br><span lang="en">${esc(c.address.en)}</span></address>
     </section>
     <section class="sp-faq" aria-labelledby="faq">
       <h2 id="faq">${esc(s.faqTitle.zh)}<span class="sp-en" lang="en">${esc(s.faqTitle.en)}</span></h2>

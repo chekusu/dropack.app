@@ -1,7 +1,7 @@
 // Copy for the bilingual support page (/support/), Chinese first, English second.
 // Facts follow the first App Store release's verified behaviour; keep answers within them.
-// Contact is the existing CHEKUSU company form. No email inbox or postal address is published
-// here and no reply time is promised.
+// Contact is the existing CHEKUSU company form and its public postal address. No email inbox
+// is published here and no reply time is promised.
 
 export const SUPPORT = {
   path: '/support/',
@@ -28,6 +28,10 @@ export const SUPPORT = {
       en: 'Mention Dropack, your device model, OS version, and the steps that led to the issue. You do not need to send private photos or full videos.',
     },
     company: 'chekusu Inc.',
+    address: {
+      ja: '〒106-0044 東京都港区東麻布2-35-1 KCビル 6F 19号室',
+      en: 'Higashiazabu 2-35-1, KC Bldg 6F #19, Minato-ku, Tokyo 106-0044, Japan',
+    },
   },
   faqTitle: { zh: '常见问题', en: 'Questions and answers' },
   faq: [
