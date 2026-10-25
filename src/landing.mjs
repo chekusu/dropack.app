@@ -1,16 +1,17 @@
 // Landing page copy for the 16 film languages. Each page is short by design: the slogan,
-// the film, three steps, the TestFlight invitation, the iOS requirement, one external-storage
+// the film, three steps, the App Store button, the iOS requirement, one external-storage
 // use case and a collapsed
 // FAQ. No release-state claims. Product facts follow the
-// internal-testing build: Dropack packs and saves on the iPhone; Apple's AirDrop moves the ZIP;
+// App Store release: Dropack packs and saves on the iPhone; Apple's AirDrop moves the ZIP;
 // pause/continue applies to saving into Photos, not to AirDrop.
 // The privacy notes exist in Simplified Chinese and English; other pages link to the English notes.
 
 const N = ' '; // narrow no-break space before French ?, :, ;
 
-// The public TestFlight invitation (Dropack 1.0, external testing). The same link on every page;
-// `get` is its button label. This is a beta invitation, never an App Store download.
-export const TESTFLIGHT = 'https://testflight.apple.com/join/yjrwM4vT';
+// Dropack on the App Store (app ID 6822189862, the same ID the app's update check uses). The
+// URL has no storefront, so Apple opens the visitor's own region. The same link on every page;
+// `get` is its button label.
+export const APP_STORE = 'https://apps.apple.com/app/id6822189862';
 
 // The open-source repositories, linked from every footer: the iOS app (labelled "GitHub", the
 // same in every language) and this website (`siteSource`).
@@ -28,7 +29,7 @@ export const LANDING = {
     steps: ['打成一个包', '用 AirDrop 发出', '逐项存进相册'],
     useCase: { title: '相机素材，存进相册。', body: '在“文件”中选择外置存储里的照片、视频或压缩包，将兼容的素材逐项存入 iPhone 相册。' },
     status: '需要 iOS 17 或更高版本。',
-    get: '通过 TestFlight 下载',
+    get: '在 App Store 下载',
     faqTitle: '常见问题',
     faq: [
       ['Dropack 会让 AirDrop 更快吗？', '不会。传输由 Apple 的 AirDrop 完成，Dropack 不能加速，也不能续传。暂停与继续指的是存入相册这一步。'],
@@ -50,7 +51,7 @@ export const LANDING = {
     steps: ['Pack into one file', 'Send with AirDrop', 'Save to Photos'],
     useCase: { title: 'Camera footage, into Photos.', body: 'Choose photos, videos or a ZIP on external storage in Files, and save compatible photos and videos to Photos, one by one.' },
     status: 'Requires iOS 17 or later.',
-    get: 'Get it on TestFlight',
+    get: 'Download on the App Store',
     faqTitle: 'Questions',
     faq: [
       ['Does Dropack make AirDrop faster?', 'No. Apple’s AirDrop does the transfer; Dropack can’t speed it up or resume it. Pause and continue apply to saving into Photos.'],
@@ -72,7 +73,7 @@ export const LANDING = {
     steps: ['裝成一個包', '用 AirDrop 傳出', '逐項存入相簿'],
     useCase: { title: '相機素材，存入相簿。', body: '在「檔案」中選擇外接儲存裝置裡的照片、影片或壓縮檔，將相容的素材逐項存入 iPhone 相簿。' },
     status: '需要 iOS 17 或以上版本。',
-    get: '透過 TestFlight 下載',
+    get: '在 App Store 下載',
     faqTitle: '常見問題',
     faq: [
       ['Dropack 會讓 AirDrop 變快嗎？', '不會。傳輸由 Apple 的 AirDrop 完成，Dropack 無法加速，也無法續傳。暫停與繼續指的是存入相簿這一步。'],
@@ -94,7 +95,7 @@ export const LANDING = {
     steps: ['1つのファイルに', 'AirDrop で送る', '「写真」に保存'],
     useCase: { title: 'カメラの素材を、「写真」へ。', body: '「ファイル」で外部ストレージの写真・ビデオ・ZIP を選ぶと、対応する写真とビデオを1項目ずつ「写真」に保存します。' },
     status: 'iOS 17 以降に対応。',
-    get: 'TestFlight で入手',
+    get: 'App Store で入手',
     faqTitle: 'よくある質問',
     faq: [
       ['AirDrop が速くなりますか？', 'いいえ。転送は Apple の AirDrop が行い、Dropack が速くしたり途中から再開したりすることはできません。一時停止と再開は「写真」への保存の話です。'],
@@ -116,7 +117,7 @@ export const LANDING = {
     steps: ['파일 하나로 묶기', 'AirDrop으로 보내기', '사진 앱에 저장'],
     useCase: { title: '카메라 촬영본을 사진 앱으로.', body: '파일 앱에서 외장 저장장치의 사진, 동영상, ZIP을 고르면 호환되는 사진과 동영상을 하나씩 사진 앱에 저장합니다.' },
     status: 'iOS 17 이상이 필요합니다.',
-    get: 'TestFlight에서 받기',
+    get: 'App Store에서 받기',
     faqTitle: '자주 묻는 질문',
     faq: [
       ['AirDrop이 빨라지나요?', '아니요. 전송은 Apple의 AirDrop이 하며, Dropack은 전송을 빠르게 하거나 이어 받게 할 수 없습니다. 일시정지와 계속은 사진 앱에 저장하는 단계에 해당합니다.'],
@@ -138,7 +139,7 @@ export const LANDING = {
     steps: ['Un solo archivo', 'Envío por AirDrop', 'Guardado en Fotos'],
     useCase: { title: 'Material de cámara, a Fotos.', body: 'Elige en Archivos fotos, vídeos o un ZIP de un almacenamiento externo y guarda en Fotos, uno a uno, las fotos y vídeos compatibles.' },
     status: 'Requiere iOS 17 o posterior.',
-    get: 'Descárgalo en TestFlight',
+    get: 'Descárgalo en el App Store',
     faqTitle: 'Preguntas',
     faq: [
       ['¿Hace más rápido AirDrop?', 'No. El envío lo hace AirDrop de Apple; Dropack no puede acelerarlo ni reanudarlo. Pausar y continuar se refiere al guardado en Fotos.'],
@@ -160,7 +161,7 @@ export const LANDING = {
     steps: ['Un seul fichier', 'Envoi par AirDrop', 'Enregistrement dans Photos'],
     useCase: { title: 'Rushes de l’appareil, dans Photos.', body: 'Choisissez dans Fichiers des photos, des vidéos ou un ZIP sur un stockage externe, et enregistrez un à un dans Photos les photos et vidéos compatibles.' },
     status: 'Nécessite iOS 17 ou version ultérieure.',
-    get: 'Obtenir sur TestFlight',
+    get: 'Télécharger dans l’App Store',
     faqTitle: 'Questions',
     faq: [
       [`Dropack accélère-t-il AirDrop${N}?`, `Non. Le transfert est assuré par AirDrop d’Apple${N}; Dropack ne peut ni l’accélérer ni le reprendre. Pause et reprise concernent l’enregistrement dans Photos.`],
@@ -182,7 +183,7 @@ export const LANDING = {
     steps: ['Eine Datei', 'Per AirDrop senden', 'In Fotos sichern'],
     useCase: { title: 'Kameramaterial in Fotos.', body: 'Wähle in „Dateien“ Fotos, Videos oder eine ZIP-Datei auf einem externen Speicher und sichere kompatible Fotos und Videos einzeln in der Fotos-App.' },
     status: 'Erfordert iOS 17 oder neuer.',
-    get: 'Über TestFlight laden',
+    get: 'Laden im App Store',
     faqTitle: 'Fragen',
     faq: [
       ['Macht Dropack AirDrop schneller?', 'Nein. Die Übertragung übernimmt AirDrop von Apple; Dropack kann sie weder beschleunigen noch fortsetzen. Pausieren und Fortsetzen betrifft das Sichern in Fotos.'],
@@ -204,7 +205,7 @@ export const LANDING = {
     steps: ['Un unico file', 'Invio con AirDrop', 'Salvataggio in Foto'],
     useCase: { title: 'Riprese della fotocamera, in Foto.', body: 'Scegli in File foto, video o un ZIP su un’unità esterna e salva in Foto, uno per uno, le foto e i video compatibili.' },
     status: 'Richiede iOS 17 o successivo.',
-    get: 'Scarica con TestFlight',
+    get: 'Scarica su App Store',
     faqTitle: 'Domande',
     faq: [
       ['Dropack rende AirDrop più veloce?', 'No. Il trasferimento è affidato ad AirDrop di Apple; Dropack non può accelerarlo né riprenderlo. Pausa e ripresa riguardano il salvataggio in Foto.'],
@@ -226,7 +227,7 @@ export const LANDING = {
     steps: ['Um único arquivo', 'Envio por AirDrop', 'Salvo no Fotos'],
     useCase: { title: 'Material da câmera, no Fotos.', body: 'Escolha no app Arquivos fotos, vídeos ou um ZIP em um armazenamento externo e salve no Fotos, um por um, as fotos e os vídeos compatíveis.' },
     status: 'Requer iOS 17 ou posterior.',
-    get: 'Baixar pelo TestFlight',
+    get: 'Baixar na App Store',
     faqTitle: 'Perguntas',
     faq: [
       ['O Dropack deixa o AirDrop mais rápido?', 'Não. A transferência é feita pelo AirDrop da Apple; o Dropack não consegue acelerá-la nem retomá-la. Pausar e continuar se refere a salvar no Fotos.'],
@@ -248,7 +249,7 @@ export const LANDING = {
     steps: ['Eén bestand', 'Via AirDrop', 'Bewaard in Foto’s'],
     useCase: { title: 'Camerabeelden, in Foto’s.', body: 'Kies in Bestanden foto’s, video’s of een zip op externe opslag en bewaar compatibele foto’s en video’s een voor een in Foto’s.' },
     status: 'Vereist iOS 17 of nieuwer.',
-    get: 'Download via TestFlight',
+    get: 'Download in de App Store',
     faqTitle: 'Vragen',
     faq: [
       ['Maakt Dropack AirDrop sneller?', 'Nee. AirDrop van Apple doet de overdracht; Dropack kan die niet versnellen of hervatten. Pauzeren en doorgaan gaat over het bewaren in Foto’s.'],
@@ -270,7 +271,7 @@ export const LANDING = {
     steps: ['Jeden plik', 'Wysyłka przez AirDrop', 'Zapis w Zdjęciach'],
     useCase: { title: 'Materiał z aparatu – do Zdjęć.', body: 'Wybierz w Plikach zdjęcia, filmy lub plik ZIP z pamięci zewnętrznej i zapisz po kolei w Zdjęciach zgodne zdjęcia i filmy.' },
     status: 'Wymaga iOS 17 lub nowszego.',
-    get: 'Pobierz przez TestFlight',
+    get: 'Pobierz z App Store',
     faqTitle: 'Pytania',
     faq: [
       ['Czy Dropack przyspiesza AirDrop?', 'Nie. Przesyłaniem zajmuje się AirDrop od Apple; Dropack nie może go przyspieszyć ani wznowić. Wstrzymanie i wznowienie dotyczą zapisywania w Zdjęciach.'],
@@ -292,7 +293,7 @@ export const LANDING = {
     steps: ['Tek bir dosya', 'AirDrop ile gönder', 'Fotoğraflar’a kaydet'],
     useCase: { title: 'Kamera çekimleri, Fotoğraflar’a.', body: 'Dosyalar’da harici depolamadaki fotoğraf, video veya ZIP’i seç; uyumlu fotoğraf ve videolar Fotoğraflar’a tek tek kaydedilir.' },
     status: 'iOS 17 veya sonrası gerekir.',
-    get: 'TestFlight ile indir',
+    get: 'App Store’dan indir',
     faqTitle: 'Sorular',
     faq: [
       ['Dropack AirDrop’u hızlandırır mı?', 'Hayır. Aktarımı Apple’ın AirDrop’u yapar; Dropack onu hızlandıramaz ya da kaldığı yerden sürdüremez. Duraklatma ve devam etme, Fotoğraflar’a kaydetme adımı içindir.'],
@@ -314,7 +315,7 @@ export const LANDING = {
     steps: ['ملف واحد', 'الإرسال عبر AirDrop', 'الحفظ في الصور'],
     useCase: { title: 'لقطات الكاميرا، إلى الصور.', body: 'اختر من تطبيق الملفات صورًا أو فيديوهات أو ملف ZIP على وحدة تخزين خارجية، واحفظ الصور والفيديوهات المتوافقة في تطبيق الصور عنصرًا بعد عنصر.' },
     status: 'يتطلب iOS 17 أو أحدث.',
-    get: 'احصل عليه عبر TestFlight',
+    get: 'احصل عليه من App Store',
     faqTitle: 'أسئلة',
     faq: [
       ['هل يجعل Dropack ميزة AirDrop أسرع؟', 'لا. ينفّذ AirDrop من Apple عملية النقل، ولا يستطيع Dropack تسريعها أو استئنافها. الإيقاف المؤقت والمتابعة يخصّان الحفظ في الصور.'],
@@ -336,7 +337,7 @@ export const LANDING = {
     steps: ['एक फ़ाइल में पैक', 'AirDrop से भेजें', 'Photos में सेव'],
     useCase: { title: 'कैमरा फ़ुटेज, Photos में।', body: 'Files में बाहरी स्टोरेज से फ़ोटो, वीडियो या ZIP चुनें; संगत फ़ोटो और वीडियो एक-एक करके Photos में सेव होते हैं।' },
     status: 'iOS 17 या नया आवश्यक है।',
-    get: 'TestFlight से डाउनलोड करें',
+    get: 'App Store से डाउनलोड करें',
     faqTitle: 'सवाल',
     faq: [
       ['क्या Dropack, AirDrop को तेज़ करता है?', 'नहीं। ट्रांसफ़र Apple का AirDrop करता है; Dropack उसे न तेज़ कर सकता है, न बीच से फिर शुरू कर सकता है। रोकना और आगे बढ़ना Photos में सेव करने के चरण के लिए है।'],
@@ -358,7 +359,7 @@ export const LANDING = {
     steps: ['Satu file', 'Kirim lewat AirDrop', 'Simpan ke Foto'],
     useCase: { title: 'Rekaman kamera, ke Foto.', body: 'Pilih foto, video, atau ZIP di penyimpanan eksternal lewat app File, lalu simpan foto dan video yang kompatibel ke Foto satu per satu.' },
     status: 'Memerlukan iOS 17 atau lebih baru.',
-    get: 'Unduh lewat TestFlight',
+    get: 'Unduh di App Store',
     faqTitle: 'Pertanyaan',
     faq: [
       ['Apakah Dropack mempercepat AirDrop?', 'Tidak. Transfer dilakukan oleh AirDrop dari Apple; Dropack tidak bisa mempercepat atau melanjutkannya. Jeda dan lanjut berlaku untuk penyimpanan ke Foto.'],

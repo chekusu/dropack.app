@@ -1,5 +1,5 @@
 // Copy for the privacy pages and the 404 page (zh and en). The landing pages are in src/landing.mjs.
-// Product facts follow the current internal-testing build; keep claims within them:
+// Product facts follow the App Store release; keep claims within them:
 // Dropack packs and imports, Apple's AirDrop moves the bytes.
 
 // The site's public origin, used for canonical, hreflang and Open Graph URLs. Set DROPACK_SITE_URL

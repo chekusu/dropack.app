@@ -8,7 +8,7 @@ import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SITE, UPDATED, locales } from '../src/content.mjs';
-import { LANDING, ORDER, SOURCE, TESTFLIGHT } from '../src/landing.mjs';
+import { APP_STORE, LANDING, ORDER, SOURCE } from '../src/landing.mjs';
 import { SUPPORT } from '../src/support.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -285,7 +285,7 @@ function landingPage(tag) {
       </figure>
       <script src="${asset('/demo.js')}"></script>
       <ol class="steps-row">${steps}</ol>
-      <p class="get"><a class="get-btn" href="${TESTFLIGHT}">${esc(t.get)}</a></p>
+      <p class="get"><a class="get-btn" href="${APP_STORE}">${esc(t.get)}</a></p>
       <p class="status-line">${esc(t.status)}</p>
     </div>
   </section>
