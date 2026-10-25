@@ -140,8 +140,8 @@ name, logo and icon (see [NOTICE.md](NOTICE.md)).
 The pages are short on purpose, and the tests enforce some content rules. Keep claims within
 what the app does: Dropack packs and saves on the device, Apple's AirDrop does the transfer,
 and pausing and continuing apply to saving into Photos. The tests reject the most likely slips,
-such as speed or capacity numbers, App Store download wording, testimonials or "coming soon"
-prose. The two privacy pages describe the official site and app; review them if you deploy a
+such as speed or capacity numbers, store promotion beyond the one App Store button,
+testimonials or "coming soon" prose. The two privacy pages describe the official site and app; review them if you deploy a
 changed copy.
 
 ## Contributing and security

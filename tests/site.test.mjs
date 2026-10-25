@@ -22,9 +22,9 @@ const pages = {
 };
 // The one link that leaves dropack.app: the support page's CHEKUSU contact form.
 const CONTACT = 'https://chekusu.com/#contact';
-// The verified public TestFlight invitation, the landing pages' only external link (written out
-// here, not imported, so a changed link in the source fails the tests).
-const TESTFLIGHT_JOIN = 'https://testflight.apple.com/join/yjrwM4vT';
+// Dropack on the App Store, the landing pages' only external link besides the source repositories
+// (written out here, not imported, so a changed link in the source fails the tests).
+const APP_STORE = 'https://apps.apple.com/app/id6822189862';
 // The open-source repositories, linked from every footer (written out, not imported).
 const APP_SOURCE = 'https://github.com/chekusu/dropack';
 const SITE_SOURCE = 'https://github.com/chekusu/dropack.app';
@@ -81,13 +81,13 @@ test('only the self-hosted language script; no third-party resources or forms', 
     assert.doesNotMatch(html, /<script>|\son[a-z]+="|<iframe|<form|<input|<embed|<object/i, rel);
     for (const [, url] of html.matchAll(/(?:href|src|poster)="([^"]+)"/g)) {
       if (rel === 'support/index.html' && url === CONTACT) continue;
-      if (rel in landing && url === TESTFLIGHT_JOIN) continue;
+      if (rel in landing && url === APP_STORE) continue;
       if (url === APP_SOURCE || url === SITE_SOURCE) continue;
       if (/^https?:/.test(url)) assert.match(url, new RegExp(`^${ORIGIN}/`), `${rel}: ${url}`);
     }
-    assert.doesNotMatch(html, /apps\.apple\.com/, `${rel}: no App Store links`);
-    const tf = [...html.matchAll(/testflight\.apple\.com[^"'\s<]*/g)].map((m) => `https://${m[0]}`);
-    assert.deepEqual(tf, rel in landing ? [TESTFLIGHT_JOIN] : [], `${rel}: TestFlight links`);
+    const store = [...html.matchAll(/apps\.apple\.com[^"'\s<]*/g)].map((m) => `https://${m[0]}`);
+    assert.deepEqual(store, rel in landing ? [APP_STORE] : [], `${rel}: App Store links`);
+    assert.doesNotMatch(html, /testflight\.apple\.com/, `${rel}: no TestFlight links`);
   }
   const headers = read('_headers');
   assert.match(headers, /Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self';/);
@@ -220,19 +220,19 @@ test('landing pages stay short: slogan, film, three steps, iOS requirement, FAQ 
   }
 });
 
-test('one TestFlight invitation button on every landing page, under the steps, above the iOS requirement', () => {
+test('one App Store button on every landing page, under the steps, above the iOS requirement', () => {
   for (const [rel, tag] of Object.entries(landing)) {
     const html = read(rel);
     const m = html.match(/<\/ol>\s*<p class="get"><a class="get-btn" href="([^"]+)">([^<]+)<\/a><\/p>\s*<p class="status-line">[^<]*iOS 17[^<]*<\/p>/);
     assert.ok(m, `${rel}: button between the steps and the iOS requirement`);
-    assert.equal(m[1], TESTFLIGHT_JOIN, `${rel}: exact public invitation`);
-    assert.match(m[2], /TestFlight/, `${rel}: label names TestFlight`);
+    assert.equal(m[1], APP_STORE, `${rel}: exact App Store link`);
+    assert.match(m[2], /App Store/, `${rel}: label names the App Store`);
     assert.ok([...m[2]].length <= 28, `${rel}: short label (${m[2]})`);
-    assert.doesNotMatch(m[2], /App Store|Store/i, `${rel}: not called an App Store download`);
+    assert.doesNotMatch(m[2], /TestFlight|beta/i, `${rel}: not called a beta invitation`);
     assert.equal((html.match(/class="get-btn"/g) || []).length, 1, `${rel}: one button`);
   }
-  assert.match(read('index.html'), />通过 TestFlight 下载</);
-  assert.match(read('en/index.html'), />Get it on TestFlight</);
+  assert.match(read('index.html'), />在 App Store 下载</);
+  assert.match(read('en/index.html'), />Download on the App Store</);
   assert.doesNotMatch(read('styles.css'), /\.get-btn[^{]*\{[^}]*(position:\s*fixed|position:\s*sticky)/, 'the button sits in the page flow');
 });
 
@@ -305,7 +305,7 @@ test('no release-state prose in landing pages or captions, and no demo disclaime
     const copy = allCopy(read(rel));
     // Support and privacy explain manual App Store/TestFlight update checks.
     // Landing pages still contain no release status or store promotion.
-    // The one exception is the TestFlight button's own label.
+    // The one exception is the App Store button's own label.
     if (Object.hasOwn(landing, rel)) {
       const label = read(rel).match(/<a class="get-btn"[^>]*>([^<]+)<\/a>/)[1];
       assert.doesNotMatch(copy.replace(label, ''), status, rel);
@@ -322,7 +322,7 @@ test('no release-state prose in landing pages or captions, and no demo disclaime
 test('copy makes none of the claims the product cannot back', () => {
   const banned = [
     /立即下载|免费下载|前往 App Store|App Store 下载/,
-    /download now|download on the app store|get it on (?!TestFlight)|available on the app store/i,
+    /download now|download on the app store|get it on|available on the app store/i,
     /sign ?up (now|today|for|to)|subscribe|waitlist|join the beta|候补|预约|订阅/i,
     /testimonial|用户评价|好评|\d[\d,.]*\s*(万|k\+?)\s*(用户|users)/i,
     /\d+(\.\d+)?\s?(GB|TB|MB\/s|GB\/s)|\b\d{2,3},000\b|十万|10 ?万/i,
@@ -334,7 +334,9 @@ test('copy makes none of the claims the product cannot back', () => {
     /coming soon|即将上线|上线日期[:：]|launch(es|ing)? (on|in) \d/i,
   ];
   for (const rel of Object.keys(pages)) {
-    const copy = allCopy(read(rel));
+    // The App Store button's own label is the one place the store is named on a landing page.
+    const label = Object.hasOwn(landing, rel) ? read(rel).match(/<a class="get-btn"[^>]*>([^<]+)<\/a>/)[1] : '';
+    const copy = allCopy(read(rel)).replace(label, '');
     for (const re of banned) assert.doesNotMatch(copy, re, `${rel}: ${re}`);
   }
 });
