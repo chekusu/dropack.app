@@ -1,0 +1,27 @@
+/* The guides (/en/guides/, /guides/, /ja/guides/), on top of styles.css. The pages' own
+   stylesheet, so styles.css and every other page stay unchanged. Light only, no images, no filters. */
+
+/* The doc layout's sections, without the landing sections' large padding. */
+.page-guide main section { padding-block: 0; }
+.page-guide .lede { margin-bottom: 0.4rem; }
+.page-guide .doc p { max-width: 40em; }
+.page-guide .doc ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+.page-guide .doc ol li::marker { color: var(--green); font-weight: 600; }
+.page-guide .doc h3 { font-size: var(--step-0); margin: 1.4rem 0 0.3rem; }
+.page-guide .g-faq p { margin-top: 0; color: var(--ink-soft); }
+
+/* The list of guides: the question as the link, one line about it below. */
+.page-guide .g-list { list-style: none; padding: 0; }
+.page-guide .g-list li { margin-bottom: 1.1rem; }
+.page-guide .g-list a { font-weight: 600; }
+.page-guide .g-list span { display: block; color: var(--ink-soft); }
+
+/* The App Store button sits in the reading column, not centred like the landing film. */
+.page-guide .get { text-align: left; margin-top: 2.6rem; }
+.page-guide .status-line { margin-top: 0.6rem; }
+
+/* The end line: the date, then the same guide in the other languages. */
+.page-guide .g-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.2rem; }
+.page-guide .g-langs { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+.page-guide .nav-list a { white-space: nowrap; }
+.page-guide .lede + .g-list { margin-top: 1.6rem; }
