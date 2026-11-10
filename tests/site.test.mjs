@@ -13,8 +13,15 @@ const LANDING_PATHS = {
   it: 'it/', 'pt-BR': 'pt-br/', nl: 'nl/', pl: 'pl/', tr: 'tr/', ar: 'ar/', hi: 'hi/', id: 'id/',
 };
 const landing = Object.fromEntries(Object.entries(LANDING_PATHS).map(([tag, p]) => [`${p}index.html`, tag]));
+// The guides: an index and four answers each in English, Simplified Chinese and Japanese.
+const GUIDE_DIRS = { en: 'en/guides/', 'zh-CN': 'guides/', ja: 'ja/guides/' };
+const GUIDE_SLUGS = ['airdrop-many-photos', 'large-zip-to-photos', 'sd-card-usb-to-photos', 'dropack-file'];
+const guides = Object.fromEntries(Object.entries(GUIDE_DIRS).flatMap(([tag, d]) => ['', ...GUIDE_SLUGS].map((s) => [`${d}${s ? `${s}/` : ''}index.html`, tag])));
+// Pages that carry the one App Store button.
+const withStore = { ...landing, ...guides };
 const pages = {
   ...landing,
+  ...guides,
   'privacy/index.html': 'zh-CN',
   'en/privacy/index.html': 'en',
   'support/index.html': 'zh-CN',
@@ -43,6 +50,12 @@ const text = (html) =>
 // Visible text plus the metadata people see in search results and link previews.
 const allCopy = (html) => text(html) + ' ' + [...html.matchAll(/content="([^"]*)"/g)].map((m) => m[1]).join(' ');
 const file = (url) => join(dist, url.replace(/^\//, '').replace(/\?.*$/, ''));
+// The page's one JSON-LD data block, parsed, and the page without it (data, not markup or copy).
+const LD = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
+const jsonLd = (html) => [...html.matchAll(LD)].map((m) => JSON.parse(m[1]));
+const withoutLd = (html) => html.replace(LD, '');
+// The App Store button's own label: the one place a page with the button names the store.
+const storeLabel = (rel, html) => (Object.hasOwn(withStore, rel) ? html.match(/<a class="get-btn"[^>]*>([^<]+)<\/a>/)[1] : '');
 
 test('every page exists with its language, title and description', () => {
   for (const [rel, lang] of Object.entries(pages)) {
@@ -60,7 +73,7 @@ test('canonical, hreflang and Open Graph point at the site origin and real files
   for (const rel of Object.keys(pages).filter((r) => r !== '404.html')) {
     const html = read(rel);
     assert.match(html, new RegExp(`<link rel="canonical" href="${ORIGIN}/`), rel);
-    const langs = rel in landing ? [...Object.keys(LANDING_PATHS), 'x-default'] : ['zh-CN', 'en', 'x-default'];
+    const langs = rel in landing ? [...Object.keys(LANDING_PATHS), 'x-default'] : rel in guides ? [...Object.keys(GUIDE_DIRS), 'x-default'] : ['zh-CN', 'en', 'x-default'];
     for (const lang of langs) assert.match(html, new RegExp(`hreflang="${lang}" href="${ORIGIN}/`), `${rel}: ${lang}`);
     const og = html.match(new RegExp(`property="og:image" content="${ORIGIN}/([^"?]+)\\?v=[0-9a-f]{10}"`));
     assert.ok(og && existsSync(join(dist, og[1])), `${rel}: og:image file`);
@@ -69,24 +82,25 @@ test('canonical, hreflang and Open Graph point at the site origin and real files
   for (const f of ['favicon.ico', 'apple-touch-icon.png', 'styles.css', 'lang.js', 'robots.txt', 'sitemap.xml', '_headers']) {
     assert.ok(existsSync(join(dist, f)), f);
   }
-  assert.equal((read('sitemap.xml').match(/<loc>/g) || []).length, 19);
+  assert.equal((read('sitemap.xml').match(/<loc>/g) || []).length, 19 + Object.keys(guides).length);
+  for (const rel of Object.keys(guides)) assert.match(read('sitemap.xml'), new RegExp(`<loc>${ORIGIN}/${rel.replace(/index\.html$/, '')}</loc>`), `${rel}: in the sitemap`);
 });
 
 test('only the self-hosted language script; no third-party resources or forms', () => {
   for (const rel of Object.keys(pages)) {
-    const html = read(rel);
+    const html = withoutLd(read(rel));
     const scripts = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
     if (rel in landing) assert.deepEqual(scripts.map((s) => s.replace(/\?v=[0-9a-f]{10}/, '')), ['<script src="/lang.js" defer>', '<script src="/demo.js">'], rel);
     else assert.equal(scripts.length, 0, rel);
     assert.doesNotMatch(html, /<script>|\son[a-z]+="|<iframe|<form|<input|<embed|<object/i, rel);
     for (const [, url] of html.matchAll(/(?:href|src|poster)="([^"]+)"/g)) {
       if (rel === 'support/index.html' && url === CONTACT) continue;
-      if (rel in landing && url === APP_STORE) continue;
+      if (rel in withStore && url === APP_STORE) continue;
       if (url === APP_SOURCE || url === SITE_SOURCE) continue;
       if (/^https?:/.test(url)) assert.match(url, new RegExp(`^${ORIGIN}/`), `${rel}: ${url}`);
     }
     const store = [...html.matchAll(/apps\.apple\.com[^"'\s<]*/g)].map((m) => `https://${m[0]}`);
-    assert.deepEqual(store, rel in landing ? [APP_STORE] : [], `${rel}: App Store links`);
+    assert.deepEqual(store, rel in withStore ? [APP_STORE] : [], `${rel}: App Store links`);
     assert.doesNotMatch(html, /testflight\.apple\.com/, `${rel}: no TestFlight links`);
   }
   const headers = read('_headers');
@@ -182,7 +196,7 @@ test('every footer links the app source ("GitHub") and the website source, after
   const { LANDING } = await import('../src/landing.mjs');
   const label = { 'privacy/index.html': '网站源代码', 'en/privacy/index.html': 'Website source', 'support/index.html': '网站源代码 / Website source', '404.html': '网站源代码' };
   for (const [rel, tag] of Object.entries(pages)) {
-    const html = read(rel);
+    const html = withoutLd(read(rel));
     const footer = html.match(/<footer class="site-footer">[\s\S]*<\/footer>/)[0];
     const site = label[rel] ?? LANDING[tag].siteSource;
     assert.ok(site && [...site].length <= 32, `${rel}: short website-source label`);
@@ -335,8 +349,7 @@ test('copy makes none of the claims the product cannot back', () => {
   ];
   for (const rel of Object.keys(pages)) {
     // The App Store button's own label is the one place the store is named on a landing page.
-    const label = Object.hasOwn(landing, rel) ? read(rel).match(/<a class="get-btn"[^>]*>([^<]+)<\/a>/)[1] : '';
-    const copy = allCopy(read(rel)).replace(label, '');
+    const copy = allCopy(read(rel)).replace(storeLabel(rel, read(rel)), '');
     for (const re of banned) assert.doesNotMatch(copy, re, `${rel}: ${re}`);
   }
 });
@@ -480,4 +493,106 @@ test('cache-busting hashes match the files they point at', async () => {
     const hash = createHash('sha256').update(readFileSync(join(dist, path))).digest('hex');
     assert.equal(hash.slice(0, 10), v, path);
   }
+});
+
+// ——— Structured data, guides, llms.txt, IndexNow ———
+
+test('every indexed page has one JSON-LD block with the app, its maker and the page', () => {
+  for (const rel of Object.keys(pages)) {
+    const html = read(rel);
+    const blocks = jsonLd(html);
+    if (rel === '404.html') { assert.equal(blocks.length, 0, rel); continue; }
+    if (!(rel in withStore)) continue;
+    assert.equal(blocks.length, 1, `${rel}: one data block`);
+    assert.ok(html.indexOf('application/ld+json') < html.indexOf('</head>'), `${rel}: in the head`);
+    const graph = blocks[0]['@graph'];
+    const app = graph.find((n) => n['@type'] === 'MobileApplication');
+    assert.equal(app.installUrl, APP_STORE, `${rel}: install link`);
+    assert.equal(app.offers.price, '0', `${rel}: free`);
+    assert.match(app.operatingSystem, /iOS 17/, rel);
+    assert.ok(!graph.some((n) => n.aggregateRating || n.review), `${rel}: no ratings or reviews`);
+    assert.ok(graph.some((n) => n['@type'] === 'Organization' && n.name === 'chekusu Inc.'), `${rel}: maker`);
+    const canonical = html.match(/<link rel="canonical" href="([^"]+)">/)[1];
+    assert.ok(graph.some((n) => n['@id'] === canonical), `${rel}: the page itself`);
+  }
+});
+
+test('landing structured data repeats the visible FAQ, word for word', async () => {
+  const { LANDING } = await import('../src/landing.mjs');
+  for (const [rel, tag] of Object.entries(landing)) {
+    const faq = jsonLd(read(rel))[0]['@graph'].find((n) => n['@type'] === 'FAQPage');
+    assert.deepEqual(faq.mainEntity.map((q) => [q.name, q.acceptedAnswer.text]), LANDING[tag].faq, rel);
+  }
+});
+
+test('guides answer first, then the built-in way, the Dropack way, limits and questions', async () => {
+  const { GUIDES } = await import('../src/guides.mjs');
+  for (const [rel, tag] of Object.entries(guides)) {
+    const html = read(rel);
+    assert.match(html, /<body id="top" class="page-doc page-guide">/, rel);
+    assert.match(html, /<link rel="stylesheet" href="\/guides\.css\?v=[0-9a-f]{10}">/, rel);
+    assert.equal((html.match(/class="get-btn"/g) || []).length, 1, `${rel}: one App Store button`);
+    assert.match(html, /<p class="status-line">[^<]*iOS 17[^<]*<\/p>/, `${rel}: iOS requirement under the button`);
+    const slug = rel.split('/').at(-2);
+    if (!GUIDE_SLUGS.includes(slug)) {
+      for (const s of GUIDE_SLUGS) assert.match(html, new RegExp(`href="/${GUIDE_DIRS[tag]}${s}/"`), `${rel}: links ${s}`);
+      continue;
+    }
+    const g = GUIDES[tag].pages[slug];
+    // The answer comes straight after the heading, before any section.
+    assert.match(html, /<h1>[^<]+<\/h1>\s*<p class="lede">[^<]{60,}<\/p>\s*<section/, `${rel}: answer first`);
+    assert.ok([...g.answer].length <= 420, `${rel}: short answer`);
+    assert.ok(g.sections.some((s) => s.steps) && g.sections.some((s) => s.list), `${rel}: steps and things to know`);
+    assert.ok(g.faq.length >= 2, `${rel}: questions`);
+    const ld = jsonLd(html)[0]['@graph'];
+    assert.deepEqual(ld.find((n) => n['@type'] === 'FAQPage').mainEntity.map((q) => q.name), g.faq.map(([q]) => q), `${rel}: FAQ data`);
+    assert.ok(ld.some((n) => n['@type'] === 'TechArticle' && n.headline === g.h1), `${rel}: article data`);
+    // Every other guide in the same language is one click away.
+    for (const s of GUIDE_SLUGS.filter((x) => x !== slug)) assert.match(html, new RegExp(`href="/${GUIDE_DIRS[tag]}${s}/"`), `${rel}: links ${s}`);
+    // The limits that keep the copy honest are stated in every language.
+    const all = JSON.stringify(g);
+    if (slug === 'airdrop-many-photos') assert.match(all, /AirDrop/, rel);
+  }
+  // The landing pages that have guides link to them from the footer.
+  for (const [tag, dir] of Object.entries(GUIDE_DIRS)) {
+    const footer = read(`${LANDING_PATHS[tag]}index.html`).match(/<footer class="site-footer">[\s\S]*<\/footer>/)[0];
+    assert.match(footer, new RegExp(`<p class="footer-links"><a href="/${dir}">`), `${tag}: guides link`);
+  }
+});
+
+test('guides never promise a faster or resumable AirDrop and state the ZIP limits', async () => {
+  const { GUIDES } = await import('../src/guides.mjs');
+  const en = JSON.stringify(GUIDES.en);
+  assert.match(en, /does not make AirDrop faster and cannot resume an AirDrop transfer/);
+  assert.match(en, /Encrypted and split ZIP archives are not supported/);
+  assert.match(JSON.stringify(GUIDES['zh-CN']), /不会让 AirDrop 变快，也不能续传 AirDrop/);
+  assert.match(JSON.stringify(GUIDES['zh-CN']), /不支持加密或分卷 ZIP/);
+  assert.match(JSON.stringify(GUIDES.ja), /AirDropを速くしたり、AirDropの転送を再開したりはできません/);
+  assert.match(JSON.stringify(GUIDES.ja), /暗号化・分割ZIPには対応していません/);
+  for (const g of Object.values(GUIDES)) {
+    const all = JSON.stringify(g);
+    assert.doesNotMatch(all, /\bRAR\b|\b7z\b|7-Zip|\bTB\b|\d\s?GB/i, 'no unsupported formats or sizes');
+  }
+});
+
+test('llms.txt summarises the app and links every guide and the App Store', () => {
+  const txt = read('llms.txt');
+  assert.match(txt, /^# Dropack\n\n> /);
+  assert.ok(txt.includes(APP_STORE), 'App Store link');
+  assert.match(txt, /does not make AirDrop faster and cannot resume/);
+  for (const rel of Object.keys(guides)) {
+    const url = `${SITE}/${rel.replace(/index\.html$/, '')}`;
+    if (GUIDE_SLUGS.some((s) => url.endsWith(`/${s}/`))) assert.ok(txt.includes(`(${url})`), `llms.txt links ${url}`);
+  }
+  for (const [, url] of txt.matchAll(/\((https:\/\/[^)]+)\)/g)) {
+    if (!url.startsWith(SITE)) continue;
+    const rel = url.slice(SITE.length + 1);
+    assert.ok(existsSync(join(dist, rel.endsWith('/') || rel === '' ? `${rel}index.html` : rel)), `llms.txt: ${url}`);
+  }
+});
+
+test('the IndexNow key file holds its own name', () => {
+  const keys = readdirSync(dist).filter((f) => /^[0-9a-f]{32}\.txt$/.test(f));
+  assert.equal(keys.length, 1, 'one key file');
+  assert.equal(read(keys[0]), keys[0].replace(/\.txt$/, ''));
 });

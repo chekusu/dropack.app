@@ -13,6 +13,9 @@ const N = ' '; // narrow no-break space before French ?, :, ;
 // `get` is its button label.
 export const APP_STORE = 'https://apps.apple.com/app/id6822189862';
 
+// Last meaningful change to the landing pages (the sitemap's lastmod and the pages' structured data).
+export const LANDING_UPDATED = '2026-11-10';
+
 // The open-source repositories, linked from every footer: the iOS app (labelled "GitHub", the
 // same in every language) and this website (`siteSource`).
 export const SOURCE = { app: 'https://github.com/chekusu/dropack', site: 'https://github.com/chekusu/dropack.app' };

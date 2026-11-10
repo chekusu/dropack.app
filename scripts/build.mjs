@@ -1,15 +1,17 @@
 // Builds the static site into dist/ using Node.js built-ins only.
 // Pages: 16 film-language landing pages (/ is Simplified Chinese, /en/, /ja/ …),
-// /privacy/ and /en/privacy/, the bilingual /support/, /404.html. Film media (from the media manifest)
-// is copied in under /media/.
+// /privacy/ and /en/privacy/, the bilingual /support/, /404.html, the guides in English,
+// Simplified Chinese and Japanese (/en/guides/, /guides/, /ja/guides/), and /llms.txt.
+// Film media (from the media manifest) is copied in under /media/.
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SITE, UPDATED, locales } from '../src/content.mjs';
-import { APP_STORE, LANDING, ORDER, SOURCE } from '../src/landing.mjs';
+import { APP_STORE, LANDING, LANDING_UPDATED, ORDER, SOURCE } from '../src/landing.mjs';
 import { SUPPORT } from '../src/support.mjs';
+import { GUIDES, GUIDES_UPDATED, GUIDE_LANGS, GUIDE_SLUGS, guidePath } from '../src/guides.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'dist');
@@ -69,6 +71,52 @@ const heroArt = (t) => `<figure class="hero-art">
 // The footer's links to the open-source repositories: "GitHub" (the iOS app) and the website's own.
 const sourceLinks = (siteLabel) =>
   `<a href="${SOURCE.app}">GitHub</a><a href="${SOURCE.site}">${esc(siteLabel)}</a>`;
+
+// ——— Structured data (JSON-LD) ———
+// One data block per page in <head>, describing the app, its maker and the page, so search
+// engines and AI assistants read the same facts the copy states. A data block is not run as a
+// script, so the Content Security Policy stays as it is. Facts only: no ratings or reviews.
+const APP_ID = `${SITE}/#app`;
+const ORG_ID = `${SITE}/#organization`;
+const SITE_ID = `${SITE}/#website`;
+const ldGraph = (...nodes) =>
+  `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': nodes }).replace(/</g, '\\u003c')}</script>`;
+const ldOrg = () => ({
+  '@type': 'Organization', '@id': ORG_ID, name: 'chekusu Inc.', url: 'https://chekusu.com/',
+  address: { '@type': 'PostalAddress', addressLocality: 'Minato-ku, Tokyo', addressCountry: 'JP' },
+});
+const ldSite = () => ({
+  '@type': 'WebSite', '@id': SITE_ID, url: `${SITE}/`, name: 'Dropack', publisher: { '@id': ORG_ID },
+  inLanguage: ORDER,
+});
+const ldApp = (tag, description) => ({
+  '@type': 'MobileApplication',
+  '@id': APP_ID,
+  name: 'Dropack',
+  alternateName: 'Dropack - Large File Transfer',
+  description,
+  url: `${SITE}${LANDING[tag].path}`,
+  operatingSystem: 'iOS 17.0 or later, iPadOS 17.0 or later',
+  applicationCategory: 'MultimediaApplication',
+  applicationSubCategory: 'Photo & Video',
+  availableLanguage: ORDER,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  isAccessibleForFree: true,
+  installUrl: APP_STORE,
+  downloadUrl: APP_STORE,
+  sameAs: [APP_STORE, SOURCE.app],
+  image: `${SITE}/brand/dropack-icon-512.png`,
+  publisher: { '@id': ORG_ID },
+  author: { '@id': ORG_ID },
+});
+const ldSource = () => ({
+  '@type': 'SoftwareSourceCode', '@id': `${SITE}/#source`, name: 'Dropack iOS app source', codeRepository: SOURCE.app,
+  programmingLanguage: 'Swift', license: 'https://opensource.org/licenses/MIT', targetProduct: { '@id': APP_ID },
+});
+const ldFaq = (url, lang, faq) => ({
+  '@type': 'FAQPage', '@id': `${url}#faq`, url, inLanguage: lang,
+  mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+});
 
 function head(loc, page, { title, description, noindex = false, styles = [] }) {
   const t = locales[loc];
@@ -241,6 +289,14 @@ function landingHead(tag) {
   <link rel="apple-touch-icon" href="${asset('/apple-touch-icon.png')}">
   <link rel="stylesheet" href="${asset('/styles.css')}">
   <script src="${asset('/lang.js')}" defer></script>
+  ${ldGraph(
+    ldOrg(),
+    ldSite(),
+    ldApp(tag, t.description),
+    ldSource(),
+    { '@type': 'WebPage', '@id': `${SITE}${t.path}`, url: `${SITE}${t.path}`, name: t.title, description: t.description, inLanguage: tag, isPartOf: { '@id': SITE_ID }, about: { '@id': APP_ID }, dateModified: LANDING_UPDATED },
+    ldFaq(`${SITE}${t.path}`, tag, t.faq),
+  )}
 </head>`;
 }
 
@@ -307,7 +363,7 @@ function landingPage(tag) {
 <footer class="site-footer">
   <div class="wrap footer-row">
     <p class="footer-brand">${brandLogo('logo logo-footer')}</p>
-    <p class="footer-links"><a href="${privacyHref}" hreflang="${privacyLang}">${esc(t.privacy)}</a>${sourceLinks(t.siteSource)}</p>
+    <p class="footer-links">${GUIDE_LANGS[tag] ? `<a href="${guidePath(tag)}">${esc(GUIDES[tag].ui.nav)}</a>` : ''}<a href="${privacyHref}" hreflang="${privacyLang}">${esc(t.privacy)}</a>${sourceLinks(t.siteSource)}</p>
     <p class="fine">${esc(t.trademark)}</p>
     <p class="fine">© 2026 Dropack</p>
   </div>
@@ -415,6 +471,207 @@ function supportPage() {
 `;
 }
 
+// ——— Guides (English, Simplified Chinese, Japanese) ———
+// Answer-first pages on the doc layout: the short answer, the built-in way, the Dropack way, what
+// to keep in mind and a few questions, then the one App Store button and links to the other guides.
+const GUIDE_TAGS = Object.keys(GUIDE_LANGS);
+
+function guideHead(tag, slug, { title, description }, graph) {
+  const t = LANDING[tag];
+  const path = guidePath(tag, slug);
+  const alt = GUIDE_TAGS.map((l) => `<link rel="alternate" hreflang="${l}" href="${SITE}${guidePath(l, slug)}">`)
+    .concat(`<link rel="alternate" hreflang="x-default" href="${SITE}${guidePath('en', slug)}">`).join('\n  ');
+  return `<!doctype html>
+<html lang="${tag}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(description)}">
+  <link rel="canonical" href="${SITE}${path}">
+  ${alt}
+  <meta name="theme-color" content="#f2ece1">
+  <meta name="color-scheme" content="light">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Dropack">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:url" content="${SITE}${path}">
+  <meta property="og:locale" content="${t.ogLocale}">
+  <meta property="og:image" content="${SITE}${asset(`/og-${t.og}.png`)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="${asset('/favicon.ico')}" sizes="16x16 32x32 48x48">
+  <link rel="icon" href="${asset('/brand/dropack-icon-192.png')}" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="${asset('/apple-touch-icon.png')}">
+  <link rel="stylesheet" href="${asset('/styles.css')}">
+  <link rel="stylesheet" href="${asset('/guides.css')}">
+  ${ldGraph(...graph)}
+</head>`;
+}
+
+function guideShell(tag, slug, meta, graph, body) {
+  const t = LANDING[tag];
+  const ui = GUIDES[tag].ui;
+  // The same guide in the other languages, next to the date at the end of the page.
+  const others = GUIDE_TAGS.filter((l) => l !== tag)
+    .map((l) => `<a href="${guidePath(l, slug)}" hreflang="${l}" lang="${l}">${esc(LANDING[l].name)}</a>`).join('');
+  const privacyLang = t.privacyLang ?? (t.privacyPath ? tag : 'en');
+  return `${guideHead(tag, slug, meta, graph)}
+<body id="top" class="page-doc page-guide">
+<a class="skip" href="#main">${esc(ui.skip)}</a>
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="${t.path}">${brandLogo('logo')}</a>
+    <nav aria-label="${esc(ui.navAria)}">
+      <ul class="nav-list">
+        <li><a href="${guidePath(tag)}"${slug ? '' : ' aria-current="page"'}>${esc(ui.nav)}</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+<main id="main" class="doc">
+  <div class="wrap doc-wrap">
+${body}
+    <p class="doc-end g-meta"><time datetime="${GUIDES_UPDATED}">${esc(ui.updated)} ${GUIDES_UPDATED}</time><span class="g-langs">${others}</span></p>
+    <p><a class="band-link" href="${t.path}"><span aria-hidden="true">← </span>${esc(ui.back)}</a></p>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-row">
+    <p class="footer-brand">${brandLogo('logo logo-footer')}</p>
+    <p class="footer-links"><a href="${guidePath(tag)}">${esc(ui.nav)}</a><a href="${t.privacyPath ?? '/en/privacy/'}" hreflang="${privacyLang}">${esc(t.privacy)}</a>${sourceLinks(t.siteSource)}</p>
+    <p class="fine">${esc(t.trademark)}</p>
+    <p class="fine">© 2026 Dropack</p>
+  </div>
+</footer>
+</body>
+</html>
+`;
+}
+
+// The one App Store button, with the iOS requirement under it, as on the landing pages.
+const guideCta = (tag) => `    <p class="get"><a class="get-btn" href="${APP_STORE}">${esc(LANDING[tag].get)}</a></p>
+    <p class="status-line">${esc(LANDING[tag].status)}</p>`;
+
+const guideList = (tag, skip) =>
+  `<ul class="g-list">
+      ${GUIDE_SLUGS.filter((s) => s !== skip).map((s) => `<li><a href="${guidePath(tag, s)}">${esc(GUIDES[tag].pages[s].h1)}</a><span>${esc(GUIDES[tag].pages[s].link)}</span></li>`).join('\n      ')}
+    </ul>`;
+
+function guidePage(tag, slug) {
+  const g = GUIDES[tag].pages[slug];
+  const ui = GUIDES[tag].ui;
+  const url = `${SITE}${guidePath(tag, slug)}`;
+  const sections = g.sections
+    .map((s, i) => `    <section aria-labelledby="g-${i + 1}">
+      <h2 id="g-${i + 1}">${esc(s.h2)}</h2>${s.steps ? `
+      <ol>
+        ${s.steps.map((x) => `<li>${esc(x)}</li>`).join('\n        ')}
+      </ol>` : ''}${s.list ? `
+      <ul>
+        ${s.list.map((x) => `<li>${esc(x)}</li>`).join('\n        ')}
+      </ul>` : ''}${s.text ? `
+      <p>${esc(s.text)}</p>` : ''}
+    </section>`)
+    .join('\n');
+  const faq = g.faq.map(([q, a], i) => `      <h3 id="q-${i + 1}">${esc(q)}</h3>
+      <p>${esc(a)}</p>`).join('\n');
+  const graph = [
+    ldOrg(),
+    ldSite(),
+    ldApp(tag, LANDING[tag].description),
+    {
+      '@type': 'TechArticle', '@id': url, url, headline: g.h1, name: g.title, description: g.description, abstract: g.answer,
+      inLanguage: tag, datePublished: GUIDES_UPDATED, dateModified: GUIDES_UPDATED, isPartOf: { '@id': SITE_ID },
+      about: { '@id': APP_ID }, author: { '@id': ORG_ID }, publisher: { '@id': ORG_ID },
+    },
+    ldFaq(url, tag, g.faq),
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Dropack', item: `${SITE}${LANDING[tag].path}` },
+      { '@type': 'ListItem', position: 2, name: ui.nav, item: `${SITE}${guidePath(tag)}` },
+      { '@type': 'ListItem', position: 3, name: g.h1, item: url },
+    ] },
+  ];
+  const body = `    <p class="kicker">${esc(ui.kicker)}</p>
+    <h1>${esc(g.h1)}</h1>
+    <p class="lede">${esc(g.answer)}</p>
+${sections}
+    <section class="g-faq" aria-labelledby="g-faq">
+      <h2 id="g-faq">${esc(ui.questions)}</h2>
+${faq}
+    </section>
+${guideCta(tag)}
+    <section class="g-more" aria-labelledby="g-more">
+      <h2 id="g-more">${esc(ui.more)}</h2>
+    ${guideList(tag, slug)}
+    </section>`;
+  return guideShell(tag, slug, g, graph, body);
+}
+
+function guideIndex(tag) {
+  const ui = GUIDES[tag].ui;
+  const url = `${SITE}${guidePath(tag)}`;
+  const graph = [
+    ldOrg(),
+    ldSite(),
+    ldApp(tag, LANDING[tag].description),
+    { '@type': 'CollectionPage', '@id': url, url, name: ui.indexTitle, description: ui.indexDescription, inLanguage: tag, isPartOf: { '@id': SITE_ID }, about: { '@id': APP_ID },
+      hasPart: GUIDE_SLUGS.map((s) => ({ '@id': `${SITE}${guidePath(tag, s)}` })) },
+  ];
+  const body = `    <h1>${esc(ui.indexH1)}</h1>
+    <p class="lede">${esc(ui.indexLede)}</p>
+ ${guideList(tag)}
+${guideCta(tag)}`;
+  return guideShell(tag, '', { title: ui.indexTitle, description: ui.indexDescription }, graph, body);
+}
+
+// /llms.txt (llmstxt.org): a plain summary for AI assistants, written from the same copy as the
+// pages: what Dropack is, when it fits, what it does not do, and where the details are.
+function llmsTxt() {
+  const en = GUIDES.en.pages;
+  const lines = [
+    '# Dropack',
+    '',
+    `> Dropack is a free iPhone and iPad app (iOS or iPadOS 17 or later) for moving large batches of original photos and videos. It packs a selection into one .dropack album file (or a standard ZIP) to send with AirDrop, and on the receiving device it saves the items into the Photos library one by one, with progress, pause and continue, and items already saved recognised and skipped. It also saves photos and videos from ordinary unencrypted ZIP files, folders, SD card readers and USB drives into Photos. No account; packing and saving happen on the device; nothing is uploaded to Dropack servers. Made by chekusu Inc. in Tokyo. The app's source code is public under the MIT License.`,
+    '',
+    `- App Store: ${APP_STORE} (listed as "Dropack - Large File Transfer"; free; categories Photo & Video and Utilities; 16 languages)`,
+    `- Website: ${SITE}/en/ (16 languages; Simplified Chinese at ${SITE}/)`,
+    `- Support and FAQ: ${SITE}${SUPPORT.path}`,
+    '',
+    '## Typical uses',
+    '',
+    '- Sending hundreds of original photos and videos to another iPhone or iPad with AirDrop as one file, and keeping them together as an album.',
+    '- Getting the photos and videos from a large ZIP (for example one received by AirDrop) into the Photos app instead of a folder in Files.',
+    '- Saving photos and videos from an SD card reader, USB drive or SSD into the iPhone or iPad Photos library, with visible progress.',
+    '- Opening a .dropack file someone sent.',
+    '',
+    '## What Dropack does not do',
+    '',
+    '- It does not make AirDrop faster and cannot resume an interrupted AirDrop transfer. Pause and continue apply to packing and to saving into Photos.',
+    '- It is an iPhone and iPad app; it does not send to Android or Windows devices. A standard ZIP export works for recipients without Dropack.',
+    '- Encrypted and split ZIP archives are not supported. Saving depends on the formats the Photos app supports; videos are not converted.',
+    '- It needs Dropack to stay open while packing or saving (iOS pauses it in the background) and free space for the package and the new items in Photos.',
+    '',
+    '## Guides',
+    '',
+    ...GUIDE_SLUGS.map((s) => `- [${en[s].h1}](${SITE}${guidePath('en', s)}): ${en[s].description}`),
+    '',
+    '## Guides in other languages',
+    '',
+    ...GUIDE_TAGS.filter((l) => l !== 'en').flatMap((l) => GUIDE_SLUGS.map((s) => `- [${GUIDES[l].pages[s].h1}](${SITE}${guidePath(l, s)}) (${LANDING[l].name})`)),
+    '',
+    '## Optional',
+    '',
+    `- [Privacy notes](${SITE}/en/privacy/): what the app and the website process`,
+    `- [iOS app source code](${SOURCE.app})`,
+    `- [Website source code](${SOURCE.site})`,
+    '',
+  ];
+  return lines.join('\n');
+}
+
 function notFoundPage() {
   const z = locales.zh.notFound;
   const e = locales.en.notFound;
@@ -447,12 +704,17 @@ const files = {
   'en/privacy/index.html': privacyPage('en'),
   'support/index.html': supportPage(),
   '404.html': notFoundPage(),
+  ...Object.fromEntries(GUIDE_TAGS.flatMap((tag) => [
+    [`${guidePath(tag).slice(1)}index.html`, guideIndex(tag)],
+    ...GUIDE_SLUGS.map((s) => [`${guidePath(tag, s).slice(1)}index.html`, guidePage(tag, s)]),
+  ])),
+  'llms.txt': llmsTxt(),
   'robots.txt': `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`,
   'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${ORDER.map((tag) => `  <url>
     <loc>${SITE}${LANDING[tag].path}</loc>
-    <lastmod>${UPDATED}</lastmod>
+    <lastmod>${LANDING_UPDATED}</lastmod>
 ${ORDER.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE}${LANDING[l].path}"/>`).join('\n')}
   </url>`).join('\n')}
 ${Object.keys(locales).map((loc) => `  <url>
@@ -462,6 +724,12 @@ ${Object.keys(locales).map((loc) => `  <url>
   <url>
     <loc>${SITE}${SUPPORT.path}</loc>
   </url>
+${['', ...GUIDE_SLUGS].flatMap((s) => GUIDE_TAGS.map((tag) => `  <url>
+    <loc>${SITE}${guidePath(tag, s)}</loc>
+    <lastmod>${GUIDES_UPDATED}</lastmod>
+${GUIDE_TAGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE}${guidePath(l, s)}"/>`).join('\n')}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${guidePath('en', s)}"/>
+  </url>`)).join('\n')}
 </urlset>
 `,
 };

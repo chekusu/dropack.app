@@ -27,6 +27,11 @@ A small static site, built with Node.js built-ins only (no framework, no runtime
   Italian (`/it/`), Brazilian Portuguese (`/pt-br/`), Dutch (`/nl/`), Polish (`/pl/`),
   Turkish (`/tr/`), Arabic (`/ar/`, right to left), Hindi (`/hi/`) and Indonesian (`/id/`)
 - privacy notes in Simplified Chinese and English, a bilingual support page and a 404 page
+- guides in English, Simplified Chinese and Japanese (`/en/guides/`, `/guides/`, `/ja/guides/`):
+  short answer pages for sending many photos with AirDrop, getting a large ZIP into Photos,
+  importing from SD cards and USB drives, and opening `.dropack` files
+- one JSON-LD block per page (the app, its maker, the page and its questions), `/llms.txt` for
+  AI assistants, and an IndexNow key file
 - accessible inline video controls (sound, play/pause, replay) with captions drawn from the
   page's WebVTT track, reduced-motion support, and a no-JavaScript fallback
 - no web fonts, analytics, cookies, forms or third-party requests; a strict Content Security
@@ -38,8 +43,10 @@ A small static site, built with Node.js built-ins only (no framework, no runtime
 src/landing.mjs           landing page copy, 16 languages
 src/content.mjs           privacy pages and 404 (Chinese and English); the site origin
 src/support.mjs           the bilingual support page
+src/guides.mjs            the guides (English, Simplified Chinese, Japanese)
 scripts/build.mjs         builds dist/ (pages, sitemap, robots.txt, hashed media)
 scripts/serve.mjs         local preview server for dist/ (with byte ranges)
+scripts/indexnow.mjs      after a deploy, tells IndexNow search engines which pages changed
 scripts/screens.mjs       optional browser QA and screenshots (Playwright)
 scripts/sample-media.mjs  re-renders the sample film (FFmpeg; not needed to build)
 public/                   stylesheets, scripts, icons, wordmark, watercolor art, headers
@@ -137,7 +144,9 @@ name, logo and icon (see [NOTICE.md](NOTICE.md)).
 
 ## Editing copy
 
-The pages are short on purpose, and the tests enforce some content rules. Keep claims within
+The pages are short on purpose, and the tests enforce some content rules. The guides are
+longer, but follow the same rules: answer first, the built-in iOS way next to the Dropack way,
+and the limits stated plainly. Keep claims within
 what the app does: Dropack packs and saves on the device, Apple's AirDrop does the transfer,
 and pausing and continuing apply to saving into Photos. The tests reject the most likely slips,
 such as speed or capacity numbers, store promotion beyond the one App Store button,
