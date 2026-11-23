@@ -29,9 +29,10 @@ A small static site, built with Node.js built-ins only (no framework, no runtime
 - privacy notes in Simplified Chinese and English, a bilingual support page and a 404 page
 - guides in English, Simplified Chinese and Japanese (`/en/guides/`, `/guides/`, `/ja/guides/`):
   short answer pages for sending many photos with AirDrop, getting a large ZIP into Photos,
-  importing from SD cards and USB drives, and opening `.dropack` files
-- one JSON-LD block per page (the app, its maker, the page and its questions), `/llms.txt` for
-  AI assistants, and an IndexNow key file
+  importing from SD cards and USB drives, and opening `.dropack` files, each with a Markdown
+  copy next to it (`/en/guides/<slug>.md`)
+- one JSON-LD block per page (the app, its maker, the page and its questions), `/llms.txt` and
+  `/llms-full.txt` (every guide in one file) for AI assistants, and an IndexNow key file
 - accessible inline video controls (sound, play/pause, replay) with captions drawn from the
   page's WebVTT track, reduced-motion support, and a no-JavaScript fallback
 - no web fonts, analytics, cookies, forms or third-party requests; a strict Content Security

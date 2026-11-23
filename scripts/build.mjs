@@ -1,7 +1,8 @@
 // Builds the static site into dist/ using Node.js built-ins only.
 // Pages: 16 film-language landing pages (/ is Simplified Chinese, /en/, /ja/ …),
 // /privacy/ and /en/privacy/, the bilingual /support/, /404.html, the guides in English,
-// Simplified Chinese and Japanese (/en/guides/, /guides/, /ja/guides/), and /llms.txt.
+// Simplified Chinese and Japanese (/en/guides/, /guides/, /ja/guides/) with a Markdown copy of each
+// guide, /llms.txt and /llms-full.txt.
 // Film media (from the media manifest) is copied in under /media/.
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -489,7 +490,8 @@ function guideHead(tag, slug, { title, description }, graph) {
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}">
   <link rel="canonical" href="${SITE}${path}">
-  ${alt}
+  ${alt}${slug ? `
+  <link rel="alternate" type="text/markdown" href="${guideMdPath(tag, slug)}">` : ''}
   <meta name="theme-color" content="#f2ece1">
   <meta name="color-scheme" content="light">
   <meta property="og:type" content="article">
@@ -627,11 +629,35 @@ ${guideCta(tag)}`;
   return guideShell(tag, '', { title: ui.indexTitle, description: ui.indexDescription }, graph, body);
 }
 
+// Markdown copies of the guide pages, next to each page (/en/guides/<slug>.md), and /llms-full.txt
+// with every guide in one file. AI assistants and their search tools read plain Markdown more
+// reliably than HTML; each copy points back at its page, which stays the canonical URL.
+const guideMdPath = (tag, slug) => `${guidePath(tag, slug).slice(0, -1)}.md`;
+
+// One guide as Markdown, word for word from the page. `depth` shifts the headings, so the guide
+// can sit under the summary in llms-full.txt.
+function guideMarkdown(tag, slug, depth = 1) {
+  const g = GUIDES[tag].pages[slug];
+  const ui = GUIDES[tag].ui;
+  const h = (n) => '#'.repeat(n + depth - 1);
+  const lines = [`${h(1)} ${g.h1}`, '', `> ${SITE}${guidePath(tag, slug)} · ${ui.updated} ${GUIDES_UPDATED}`, '', g.answer, ''];
+  for (const s of g.sections) {
+    lines.push(`${h(2)} ${s.h2}`, '');
+    if (s.steps) lines.push(...s.steps.map((x, i) => `${i + 1}. ${x}`), '');
+    if (s.list) lines.push(...s.list.map((x) => `- ${x}`), '');
+    if (s.text) lines.push(s.text, '');
+  }
+  lines.push(`${h(2)} ${ui.questions}`, '');
+  for (const [q, a] of g.faq) lines.push(`${h(3)} ${q}`, '', a, '');
+  lines.push(`[${LANDING[tag].get}](${APP_STORE}) · ${LANDING[tag].status}`, '');
+  return lines.join('\n');
+}
+
 // /llms.txt (llmstxt.org): a plain summary for AI assistants, written from the same copy as the
 // pages: what Dropack is, when it fits, what it does not do, and where the details are.
-function llmsTxt() {
-  const en = GUIDES.en.pages;
-  const lines = [
+// llms-full.txt repeats the summary, then every guide in full.
+function llmsIntro() {
+  return [
     '# Dropack',
     '',
     `> Dropack is a free iPhone and iPad app (iOS or iPadOS 17 or later) for moving large batches of original photos and videos. It packs a selection into one .dropack album file (or a standard ZIP) to send with AirDrop, and on the receiving device it saves the items into the Photos library one by one, with progress, pause and continue, and items already saved recognised and skipped. It also saves photos and videos from ordinary unencrypted ZIP files, folders, SD card readers and USB drives into Photos. No account; packing and saving happen on the device; nothing is uploaded to Dropack servers. Made by chekusu Inc. in Tokyo. The app's source code is public under the MIT License.`,
@@ -639,6 +665,7 @@ function llmsTxt() {
     `- App Store: ${APP_STORE} (listed as "Dropack - Large File Transfer"; free; categories Photo & Video and Utilities; 16 languages)`,
     `- Website: ${SITE}/en/ (16 languages; Simplified Chinese at ${SITE}/)`,
     `- Support and FAQ: ${SITE}${SUPPORT.path}`,
+    `- Every guide in full, as Markdown: ${SITE}/llms-full.txt`,
     '',
     '## Typical uses',
     '',
@@ -654,13 +681,21 @@ function llmsTxt() {
     '- Encrypted and split ZIP archives are not supported. Saving depends on the formats the Photos app supports; videos are not converted.',
     '- It needs Dropack to stay open while packing or saving (iOS pauses it in the background) and free space for the package and the new items in Photos.',
     '',
+  ];
+}
+
+function llmsTxt() {
+  const en = GUIDES.en.pages;
+  const md = (l, s) => `[Markdown](${SITE}${guideMdPath(l, s)})`;
+  const lines = [
+    ...llmsIntro(),
     '## Guides',
     '',
-    ...GUIDE_SLUGS.map((s) => `- [${en[s].h1}](${SITE}${guidePath('en', s)}): ${en[s].description}`),
+    ...GUIDE_SLUGS.map((s) => `- [${en[s].h1}](${SITE}${guidePath('en', s)}): ${en[s].description} ${md('en', s)}`),
     '',
     '## Guides in other languages',
     '',
-    ...GUIDE_TAGS.filter((l) => l !== 'en').flatMap((l) => GUIDE_SLUGS.map((s) => `- [${GUIDES[l].pages[s].h1}](${SITE}${guidePath(l, s)}) (${LANDING[l].name})`)),
+    ...GUIDE_TAGS.filter((l) => l !== 'en').flatMap((l) => GUIDE_SLUGS.map((s) => `- [${GUIDES[l].pages[s].h1}](${SITE}${guidePath(l, s)}) (${LANDING[l].name}) ${md(l, s)}`)),
     '',
     '## Optional',
     '',
@@ -670,6 +705,22 @@ function llmsTxt() {
     '',
   ];
   return lines.join('\n');
+}
+
+function llmsFull() {
+  return [...llmsIntro(), ...GUIDE_TAGS.flatMap((l) => GUIDE_SLUGS.map((s) => guideMarkdown(l, s, 2)))].join('\n');
+}
+
+// Header rules for the text files: UTF-8 (without a charset, many HTTP clients decode text as
+// Latin-1 and garble the Chinese and Japanese), and a canonical link from each Markdown copy to
+// its page. Appended to public/_headers.
+function textHeaders() {
+  const rule = (path, type, canonical) => `${path}\n  Content-Type: ${type}; charset=utf-8${canonical ? `\n  Link: <${canonical}>; rel="canonical"` : ''}`;
+  return ['', '# Plain-text and Markdown copies for AI assistants: UTF-8, and each copy points at its page.',
+    rule('/llms.txt', 'text/plain'),
+    rule('/llms-full.txt', 'text/plain'),
+    ...GUIDE_TAGS.flatMap((l) => GUIDE_SLUGS.map((s) => rule(guideMdPath(l, s), 'text/markdown', `${SITE}${guidePath(l, s)}`))),
+    ''].join('\n');
 }
 
 function notFoundPage() {
@@ -708,7 +759,10 @@ const files = {
     [`${guidePath(tag).slice(1)}index.html`, guideIndex(tag)],
     ...GUIDE_SLUGS.map((s) => [`${guidePath(tag, s).slice(1)}index.html`, guidePage(tag, s)]),
   ])),
+  ...Object.fromEntries(GUIDE_TAGS.flatMap((tag) => GUIDE_SLUGS.map((s) => [guideMdPath(tag, s).slice(1), guideMarkdown(tag, s)]))),
   'llms.txt': llmsTxt(),
+  'llms-full.txt': llmsFull(),
+  '_headers': readFileSync(join(root, 'public', '_headers'), 'utf8').trimEnd() + '\n' + textHeaders(),
   'robots.txt': `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`,
   'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
