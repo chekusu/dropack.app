@@ -10,7 +10,7 @@ const types = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml',
   '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml',
   '.js': 'text/javascript; charset=utf-8', '.mp4': 'video/mp4', '.jpg': 'image/jpeg', '.vtt': 'text/vtt; charset=utf-8',
-  '.srt': 'application/x-subrip', '.webp': 'image/webp',
+  '.srt': 'application/x-subrip', '.webp': 'image/webp', '.md': 'text/markdown; charset=utf-8',
 };
 
 export function serve(port = Number(process.env.PORT) || 4321, host = process.env.HOST || '127.0.0.1') {

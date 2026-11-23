@@ -105,7 +105,9 @@ test('only the self-hosted language script; no third-party resources or forms', 
   }
   const headers = read('_headers');
   assert.match(headers, /Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self';/);
-  assert.doesNotMatch(headers, /unsafe-inline|unsafe-eval|https?:\/\//);
+  assert.doesNotMatch(headers, /unsafe-inline|unsafe-eval/);
+  // The only URLs are canonical links from the Markdown copies back to this site's pages.
+  for (const [url] of headers.matchAll(/https?:\/\/[^>\s]+/g)) assert.match(url, new RegExp(`^${ORIGIN}/`), `_headers: ${url}`);
   assert.match(headers, /no-transform/);
   assert.match(headers, /\/media\/\*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable, no-transform/);
   assert.match(headers, /\/media\/dl\/\*\n  Content-Disposition: attachment/);
@@ -588,6 +590,52 @@ test('llms.txt summarises the app and links every guide and the App Store', () =
     if (!url.startsWith(SITE)) continue;
     const rel = url.slice(SITE.length + 1);
     assert.ok(existsSync(join(dist, rel.endsWith('/') || rel === '' ? `${rel}index.html` : rel)), `llms.txt: ${url}`);
+  }
+});
+
+test('each guide has a Markdown copy next to it, word for word, pointing back at the page', async () => {
+  const { GUIDES } = await import('../src/guides.mjs');
+  const headers = read('_headers');
+  for (const [tag, dir] of Object.entries(GUIDE_DIRS)) {
+    for (const slug of GUIDE_SLUGS) {
+      const g = GUIDES[tag].pages[slug];
+      const rel = `${dir}${slug}.md`;
+      const page = `${SITE}/${dir}${slug}/`;
+      const md = read(rel);
+      assert.ok(md.startsWith(`# ${g.h1}\n\n> ${page} `), `${rel}: heading, then the page URL`);
+      assert.ok(md.includes(`\n${g.answer}\n`), `${rel}: the short answer`);
+      for (const s of g.sections) {
+        assert.ok(md.includes(`\n## ${s.h2}\n`), `${rel}: ${s.h2}`);
+        for (const [i, x] of (s.steps ?? []).entries()) assert.ok(md.includes(`\n${i + 1}. ${x}\n`), `${rel}: step ${i + 1}`);
+        for (const x of s.list ?? []) assert.ok(md.includes(`\n- ${x}\n`), `${rel}: ${x}`);
+      }
+      for (const [q, a] of g.faq) assert.ok(md.includes(`\n### ${q}\n\n${a}\n`), `${rel}: ${q}`);
+      assert.equal(md.match(/apps\.apple\.com[^)\s]*/g).join(), APP_STORE.replace(/^https:\/\//, ''), `${rel}: one App Store link`);
+      assert.doesNotMatch(md, /<[a-z][^>]*>/i, `${rel}: no HTML`);
+      // The page offers the copy; the copy is served as UTF-8 Markdown with the page as canonical.
+      assert.match(read(`${dir}${slug}/index.html`), new RegExp(`<link rel="alternate" type="text/markdown" href="/${rel}">`), `${rel}: linked from the page`);
+      assert.ok(headers.includes(`\n/${rel}\n  Content-Type: text/markdown; charset=utf-8\n  Link: <${page}>; rel="canonical"\n`), `${rel}: headers`);
+      // Copies are not in the sitemap: the page is the one to index.
+      assert.doesNotMatch(read('sitemap.xml'), new RegExp(`${rel.replace(/\./g, '\\.')}`), `${rel}: not in the sitemap`);
+    }
+  }
+  assert.match(headers, /\n\/llms\.txt\n  Content-Type: text\/plain; charset=utf-8\n/);
+  assert.match(headers, /\n\/llms-full\.txt\n  Content-Type: text\/plain; charset=utf-8\n/);
+});
+
+test('llms-full.txt repeats the summary, then every guide in full', () => {
+  const full = read('llms-full.txt');
+  const txt = read('llms.txt');
+  const intro = txt.slice(0, txt.indexOf('## Guides\n'));
+  assert.ok(full.startsWith(intro), 'same summary as llms.txt');
+  assert.ok(txt.includes(`${SITE}/llms-full.txt`), 'llms.txt points at it');
+  for (const [tag, dir] of Object.entries(GUIDE_DIRS)) {
+    for (const slug of GUIDE_SLUGS) {
+      // Each guide appears one heading level down, otherwise identical to its Markdown copy.
+      const md = read(`${dir}${slug}.md`).replace(/^(#+) /gm, '#$1 ');
+      assert.ok(full.includes(md), `${tag} ${slug}`);
+      assert.ok(txt.includes(`(${SITE}/${dir}${slug}.md)`), `llms.txt links the ${tag} ${slug} copy`);
+    }
   }
 });
 
