@@ -114,6 +114,21 @@ test('a showing track is hidden again on media load, play, seek and cue changes,
   assert.equal(p.video.muted, false, 'sound behaviour unchanged');
 });
 
+test('a late failure from the first sound request leaves the newer sound session playing', async () => {
+  const p = page();
+  let rejectFirst;
+  p.video.play = () => new Promise((_, reject) => { rejectFirst = reject; });
+  p.buttons.sound.dispatchEvent(new Event('click'));
+  p.buttons.sound.dispatchEvent(new Event('click'));
+  p.video.play = () => Promise.resolve();
+  p.buttons.sound.dispatchEvent(new Event('click'));
+  rejectFirst(new Error('interrupted earlier request'));
+  await settle();
+  assert.equal(p.video.muted, false);
+  assert.equal(p.video.loop, false);
+  assert.equal(p.buttons.sound.getAttribute('aria-pressed'), 'true');
+});
+
 test('a track added later in showing mode is hidden too', async () => {
   const p = page();
   await settle();

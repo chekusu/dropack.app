@@ -31,13 +31,15 @@
   let userPaused = reduce.matches; // reduced motion: nothing starts until the visitor asks
   let soundSession = false; // true from the sound gesture until the film ends or is muted
 
-  const play = () => video.play().catch(() => { render(); });
+  let playbackIntent = 0;
+  const play = () => { playbackIntent++; return video.play().catch(() => { render(); }); };
 
   // Automatic playback is only ever the muted ambient loop, never with reduced motion, and only
   // when nobody paused it, it is on screen (≥ 35 %) and the page is visible.
   function sync() {
     const visible = inView && document.visibilityState === 'visible';
     if (!visible) {
+      playbackIntent++;
       if (!video.paused) video.pause();
       // Sound never comes back on its own: leaving ends the sound session as a user pause.
       if (soundSession) { soundSession = false; userPaused = true; }
@@ -60,6 +62,7 @@
   }
 
   btn.sound.addEventListener('click', () => {
+    const intent = ++playbackIntent;
     if (video.muted) {
       // Explicit gesture: restart so the narration is heard from its first sentence, once.
       soundSession = true;
@@ -67,7 +70,13 @@
       video.loop = false;
       video.muted = false;
       video.currentTime = 0;
-      video.play().catch(() => { video.muted = true; video.loop = true; soundSession = false; render(); });
+      video.play().catch(() => {
+        if (intent !== playbackIntent) return;
+        video.muted = true;
+        video.loop = true;
+        soundSession = false;
+        render();
+      });
     } else {
       soundSession = false;
       video.muted = true;
@@ -80,6 +89,7 @@
 
   btn.play.addEventListener('click', () => {
     if (!video.paused && !video.ended) {
+      playbackIntent++;
       userPaused = true;
       video.pause();
     } else {
